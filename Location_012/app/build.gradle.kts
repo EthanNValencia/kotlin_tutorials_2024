@@ -1,15 +1,14 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("kotlin-parcelize")
 }
 
 android {
-    namespace = "com.nt.recipeapp_010"
+    namespace = "com.nt.location_012"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.nt.recipeapp_010"
+        applicationId = "com.nt.location_012"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
@@ -52,13 +51,6 @@ android {
 
 dependencies {
 
-    implementation("androidx.navigation:navigation-compose:2.7.6")
-
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0") // Compose ViewModel
-    implementation("com.squareup.retrofit2:retrofit:2.9.0") // API calls
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0") // json to kotlin object mapper
-    implementation("io.coil-kt:coil-compose:2.4.0") // Load images
-
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.activity:activity-compose:1.8.2")
@@ -67,6 +59,9 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    implementation("com.google.android.gms:play-services-location:21.1.0")
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")

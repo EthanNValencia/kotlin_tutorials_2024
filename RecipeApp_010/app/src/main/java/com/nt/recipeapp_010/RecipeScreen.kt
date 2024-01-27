@@ -1,6 +1,7 @@
 package com.nt.recipeapp_010
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -24,8 +25,8 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 
 @Composable
-fun RecipeScreen(recipeViewModel: MainViewModel, modifier: Modifier = Modifier) {
-    val viewState by recipeViewModel.categoriesState
+fun RecipeScreen(viewState: MainViewModel.RecipeState , modifier: Modifier = Modifier, navigateToDetail: (Category) -> Unit) {
+    // viewState by recipeViewModel.categoriesState
     Box(modifier = Modifier.fillMaxSize()) {
         when {
             viewState.loading -> {
@@ -35,14 +36,14 @@ fun RecipeScreen(recipeViewModel: MainViewModel, modifier: Modifier = Modifier) 
                 Text(text = "Error: ${viewState.error}")
             }
             else -> {
-                CategoryScreen(categories = viewState.list)
+                CategoryScreen(categories = viewState.list, navigateToDetail)
             }
         }
     }
 }
 
 @Composable
-fun CategoryScreen(categories: List<Category>) {
+fun CategoryScreen(categories: List<Category>, navigateToDetail: (Category) -> Unit) {
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -51,22 +52,23 @@ fun CategoryScreen(categories: List<Category>) {
         Image(
             painter = rememberAsyncImagePainter("https://www.themealdb.com/images/logo-small.png"),
             contentDescription = "Category image",
-            modifier = Modifier
-                .aspectRatio(6f)
+            modifier = Modifier.aspectRatio(6f)
         )
         LazyVerticalGrid(columns = GridCells.Fixed(2), modifier = Modifier.fillMaxSize()) {
             items(categories) {
-                    category -> CategoryItem(category)
+                    category -> CategoryItem(category, navigateToDetail)
             }
         }
     }
 }
 
 @Composable
-fun CategoryItem(category: Category) {
-    Column(modifier = Modifier
-        .padding(8.dp)
-        .fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+fun CategoryItem(category: Category, navigateToDetail: (Category) -> Unit) {
+    Column(modifier =
+        Modifier.padding(8.dp)
+            .clickable { navigateToDetail(category) }
+        .fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally) {
         Image(
             painter = rememberAsyncImagePainter(category.strCategoryThumb),
             contentDescription = "Category image",
