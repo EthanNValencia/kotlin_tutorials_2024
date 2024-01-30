@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -44,7 +43,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -110,11 +108,16 @@ fun AddEditScreen(
         if(wishViewModel.wishTitleState.isNotEmpty() && wishViewModel.wishDescriptionState.isNotEmpty()) {
             // update wish
         } else {
-            // add wish
+
         }
     }
 
-    Scaffold(topBar = {TopBarComponent(title = pickScaffoldTitle()){} }) {
+    Scaffold(
+        topBar = {TopBarComponent(
+            title = pickScaffoldTitle(),
+            onBackNavClicked = {
+      navController.navigateUp()
+    })}) {
         Column(
             modifier = Modifier
                 .padding(it)
@@ -178,7 +181,7 @@ fun HomeScreen(wishViewModel: WishViewModel, navController: NavController) {
     }
 
     Scaffold(topBar = { TopBarComponent(title = "WishList", onBackNavClicked = {
-        clickBackButton()
+        navController.navigateUp()
     })
     }, floatingActionButton = {
         FloatingActionButton(
@@ -206,7 +209,7 @@ fun HomeScreen(wishViewModel: WishViewModel, navController: NavController) {
 @Composable
 fun TopBarComponent(title: String, onBackNavClicked: () -> Unit) {
     val navigationIcon: (@Composable () -> Unit)? = {
-        if(title.contains("WishList")) {
+        if(!title.contains("WishList")) {
             IconButton(onClick = { onBackNavClicked() }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,

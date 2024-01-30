@@ -16,7 +16,7 @@ object RetrofitClient {
         return retrofit.create(GeocodingApiService::class.java)
     }
 }
-// https://maps.googleapis.com/maps/api/geocode/json?latlng=24,24&key=AIzaSyC-2gFAxzSwQqX41jZ2w1s9CC7f5A5Jf0o
+// Does it matter? Nope.
 interface GeocodingApiService {
     @GET("maps/api/geocode/json")
     suspend fun getAddressFromCoordinates(
