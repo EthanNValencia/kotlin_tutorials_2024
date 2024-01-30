@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.nt.mywishlist_013"
+    namespace = "com.nt.musicapp_013"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.nt.mywishlist_013"
+        applicationId = "com.nt.musicapp_013"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
@@ -51,19 +51,22 @@ android {
 }
 
 dependencies {
+
     val nav_version = "2.7.5"
     val compose_version = "1.6.0-beta02"
-    val room = "2.6.0"
 
-    implementation("androidx.room:room-runtime:$room")
-    implementation("androidx.room:room-ktx:$room")
-    kapt("androidx.room:room-compiler:$room")
+    // val room = "2.6.0"
+    // implementation("androidx.room:room-runtime:$room")
+    // implementation("androidx.room:room-ktx:$room")
+    // kapt("androidx.room:room-compiler:$room")
 
     implementation("androidx.navigation:navigation-compose:$nav_version")
     implementation("androidx.core:core-ktx:1.7.0")
     implementation("androidx.compose.ui:ui:$compose_version")
     implementation("androidx.compose.material:material:$compose_version")
+    //noinspection GradleDependency
     implementation("androidx.compose.ui:ui-tooling-preview:$compose_version")
+
 
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
