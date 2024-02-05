@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 
@@ -34,9 +35,8 @@ fun SubscriptionView() {
                         Text(text = "Free Tier")
                     }
                     TextButton(onClick = { /*TODO*/ }) {
-                        Text(text = "See All Plans")
-                        Icon(imageVector = Icons.Default.KeyboardArrowRight, contentDescription = "See Plans")
-
+                        Text(text = "See All Plans", color = Color.DarkGray)
+                        Icon(imageVector = Icons.Default.KeyboardArrowRight, contentDescription = "See Plans", tint = Color.DarkGray)
                     }
                 }
                 Divider(modifier = Modifier.padding(horizontal = 20.dp))

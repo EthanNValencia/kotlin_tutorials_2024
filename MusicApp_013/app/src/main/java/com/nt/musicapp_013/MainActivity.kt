@@ -1,10 +1,8 @@
 package com.nt.musicapp_013
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
@@ -12,8 +10,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.BottomNavigation
+import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.Scaffold
 import androidx.compose.material.ScaffoldState
 import androidx.compose.material.TopAppBar
@@ -32,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -60,14 +63,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-sealed class Screen(val title: String, val route: String, @DrawableRes val icon: Int) {
-    data object Account: Screen(title = "Account", route = "account", icon = R.drawable.ic_account)
-    data object Subscription: Screen(title = "Subscription", route = "subscribe", icon =  R.drawable.ic_subscribe)
-    data object AddAccount: Screen(title = "Add Account", route = "add", icon = R.drawable.baseline_person_add_alt_1_24)
-
-
-}
-
+@Deprecated(message = "Working version but changing to the inline version.")
 @Composable
 fun TopBar(viewModel: MainViewModel, scope: CoroutineScope, scaffoldState: ScaffoldState) {
     TopAppBar(
@@ -78,9 +74,10 @@ fun TopBar(viewModel: MainViewModel, scope: CoroutineScope, scaffoldState: Scaff
                 scaffoldState.drawerState.open()
             }
         }) {
-            Icon(painter = painterResource(id = viewModel.currentScreen.value.icon), contentDescription = "Account")
+            Icon(painter = painterResource(id = viewModel.currentScreen.value.icon), contentDescription = viewModel.currentScreen.value.title)
         }})
 }
+
 
 @Composable
 fun DrawerItem(selected: Boolean, item: Screen, onDrawerItemClicked: () -> Unit) {
@@ -88,15 +85,17 @@ fun DrawerItem(selected: Boolean, item: Screen, onDrawerItemClicked: () -> Unit)
     Row(modifier = Modifier
         .fillMaxWidth()
         .padding(horizontal = 8.dp, vertical = 16.dp)
-        .background(background)
+        .background(background, shape = RoundedCornerShape(8.dp))
         .clickable { onDrawerItemClicked() }
     ) {
-        Icon(
-            painter = painterResource(id = item.icon), 
-            contentDescription = item.title,
-            Modifier.padding(end = 8.dp, top = 4.dp)
-        )
-        Text(text = item.title, style = MaterialTheme.typography.headlineLarge)
+        Row(modifier = Modifier.padding(horizontal = 10.dp)) {
+            Icon(
+                painter = painterResource(id = item.icon),
+                contentDescription = item.title,
+                Modifier.padding(end = 8.dp, top = 4.dp)
+            )
+            Text(text = item.title, style = MaterialTheme.typography.headlineLarge, fontSize = 24.sp)
+        }
     }
 }
 
@@ -105,7 +104,6 @@ fun MainView() {
     val scaffoldState: ScaffoldState = rememberScaffoldState()
     val scope: CoroutineScope = rememberCoroutineScope()
     val viewModel: MainViewModel = viewModel()
-    val screensInDrawer = listOf(Screen.Account, Screen.Subscription, Screen.AddAccount)
     // Allow us to find the view we are currently in.
     val navController: NavController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -114,12 +112,51 @@ fun MainView() {
     val dialogOpen = remember{ mutableStateOf(false) }
     val title = remember{ mutableStateOf(currentScreen.title) }
 
+    // Okay, lets start making Kotlin look like js.
+    val topBar: @Composable () -> Unit = {
+        TopAppBar(
+            title = { Text(text = viewModel.currentScreen.value.title) },
+            backgroundColor = Color.LightGray,
+            navigationIcon = { IconButton(onClick = {
+                scope.launch {
+                    scaffoldState.drawerState.open()
+                }
+            }) {
+                Icon(painter = painterResource(id = viewModel.currentScreen.value.icon), contentDescription = "Account")
+            }})
+    }
+
+    val navigateBottomBar: (Screen) -> Unit = { screen ->
+        viewModel.setCurrentScreen(screen)
+        navController.navigate(screen.route)
+        // Navigation is happen in two different places in the app. (Check DrawerItem)
+        // Which is fine because the changes are synchronized in the view model.
+    }
+
+    val bottomBar: @Composable () -> Unit = {
+        if(currentScreen.type == ScreenType.DRAWER || currentScreen == Screen.Home) {
+            BottomNavigation(modifier = Modifier.wrapContentSize(), backgroundColor = Color.LightGray) {
+                bottomScreens.forEach { item ->
+                    BottomNavigationItem(selected = currentRoute == item.route,
+                        onClick = { navigateBottomBar(item) }, icon = {
+                            Icon(painter = painterResource(id = item.icon), contentDescription = item.title)
+                        },
+                        label = { Text(text = item.title)},
+                        selectedContentColor = Color.Transparent,
+                        unselectedContentColor = Color.Black,
+                    )
+                }
+            }
+        }
+    }
+
     Scaffold(
-        topBar = { TopBar(viewModel = viewModel, scope = scope, scaffoldState = scaffoldState)},
+        bottomBar = bottomBar,
+        topBar = topBar,
         scaffoldState = scaffoldState,
         drawerContent = {
             LazyColumn(modifier = Modifier.padding(16.dp)) {
-                items(screensInDrawer) { item ->
+                items(drawerScreens) { item ->
                     DrawerItem(selected = currentRoute == item.route, item = item) {
                         scope.launch {
                             scaffoldState.drawerState.close()
@@ -127,8 +164,7 @@ fun MainView() {
                         if(item.route == Screen.AddAccount.route) {
                             dialogOpen.value = true
                         } else {
-                            viewModel.setCurrentScreen(item)
-                            navController.navigate(item.route)
+                            navigateBottomBar(item)
                             title.value = item.title
                         }
                     }
@@ -138,20 +174,30 @@ fun MainView() {
         ) {
         // Text(text = "Test Composable", modifier = Modifier.padding(it))
         Navigation(navController = navController, viewModel = viewModel, pd = it)
-        AccountDialogue(dialogOpen = dialogOpen)
+        AddAccountDialogue(dialogOpen = dialogOpen)
     }
 }
 
 @Composable
 fun Navigation(navController: NavController, viewModel: MainViewModel, pd: PaddingValues) {
     NavHost(navController = navController as NavHostController, startDestination = viewModel.currentScreen.value.route, modifier = Modifier.padding(pd)) {
+        // With add account I want a pop up to open, that is why it is not here.
         composable(route = Screen.Account.route) {
             AccountView()
         }
         composable(route = Screen.Subscription.route) {
             SubscriptionView()
         }
-        // With add account I want a pop up to open, that is why it is not here.
+       composable(route = Screen.Home.route) {
+           HomeView(viewModel)
+       }
+        composable(route = Screen.Browse.route) {
+            BrowseView(viewModel)
+        // BrowseViewFirstAttempt(viewModel)
+        }
+        composable(route = Screen.Library.route) {
+            LibraryView(viewModel = viewModel)
+        }
     }
 
 }
