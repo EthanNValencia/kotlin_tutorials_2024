@@ -217,7 +217,6 @@ fun MainView() {
                 }
             }
         ) {
-            // Text(text = "Test Composable", modifier = Modifier.padding(it))
             Navigation(navController = navController, viewModel = viewModel, pd = it)
             AddAccountDialogue(dialogOpen = dialogOpen)
         }

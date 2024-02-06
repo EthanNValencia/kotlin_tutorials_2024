@@ -23,8 +23,8 @@ class MainViewModel: ViewModel() {
     )
     val bottomSheetOptions = listOf(
         BottomSheetOption(name = "Settings", icon = R.drawable.baseline_settings_24),
-        BottomSheetOption(name = "Settings", icon = R.drawable.baseline_settings_24),
-        BottomSheetOption(name = "Settings", icon = R.drawable.baseline_settings_24)
+        BottomSheetOption(name = "Help", icon = R.drawable.baseline_help_center_24),
+        BottomSheetOption(name = "Share", icon = R.drawable.baseline_share_24)
     )
 
     fun randomizedCategories(): List<String> {
