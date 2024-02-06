@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 
 data class LibraryCategory(val name: String, @DrawableRes val icon: Int)
+data class BottomSheetOption(val name: String, @DrawableRes val icon: Int)
 
 class MainViewModel: ViewModel() {
     private val _currentScreen: MutableState<Screen> = mutableStateOf(Screen.Account)
@@ -19,6 +20,11 @@ class MainViewModel: ViewModel() {
         LibraryCategory("Album", R.drawable.baseline_album_24),
         LibraryCategory("Songs", R.drawable.baseline_queue_music_24),
         LibraryCategory("Genre", R.drawable.baseline_category_24),
+    )
+    val bottomSheetOptions = listOf(
+        BottomSheetOption(name = "Settings", icon = R.drawable.baseline_settings_24),
+        BottomSheetOption(name = "Settings", icon = R.drawable.baseline_settings_24),
+        BottomSheetOption(name = "Settings", icon = R.drawable.baseline_settings_24)
     )
 
     fun randomizedCategories(): List<String> {

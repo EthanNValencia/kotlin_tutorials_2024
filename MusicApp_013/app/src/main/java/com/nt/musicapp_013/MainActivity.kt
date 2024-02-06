@@ -5,10 +5,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,15 +20,22 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ModalBottomSheetLayout
+import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Scaffold
 import androidx.compose.material.ScaffoldState
 import androidx.compose.material.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.rememberScaffoldState
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +44,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -74,7 +86,8 @@ fun TopBar(viewModel: MainViewModel, scope: CoroutineScope, scaffoldState: Scaff
                 scaffoldState.drawerState.open()
             }
         }) {
-            Icon(painter = painterResource(id = viewModel.currentScreen.value.icon), contentDescription = viewModel.currentScreen.value.title)
+            Icon(painter = painterResource(id = viewModel.currentScreen.value.icon),
+                contentDescription = viewModel.currentScreen.value.title)
         }})
 }
 
@@ -94,16 +107,31 @@ fun DrawerItem(selected: Boolean, item: Screen, onDrawerItemClicked: () -> Unit)
                 contentDescription = item.title,
                 Modifier.padding(end = 8.dp, top = 4.dp)
             )
-            Text(text = item.title, style = MaterialTheme.typography.headlineLarge, fontSize = 24.sp)
+            Text(
+                text = item.title,
+                style = MaterialTheme.typography.headlineLarge,
+                fontSize = 24.sp
+            )
         }
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun MainView() {
     val scaffoldState: ScaffoldState = rememberScaffoldState()
     val scope: CoroutineScope = rememberCoroutineScope()
     val viewModel: MainViewModel = viewModel()
+
+    // The follow declarations are for the ModalBottomSheetLayout and the MoreBottomSheet.
+    val isSheetFullScreen by remember { mutableStateOf(false) }
+    val bottomSheetModifier = if(isSheetFullScreen) Modifier.fillMaxSize() else Modifier.fillMaxWidth()
+    val sheetState = rememberModalBottomSheetState(
+        initialValue = ModalBottomSheetValue.Hidden,
+        confirmValueChange = { it != ModalBottomSheetValue.HalfExpanded }
+    )
+    val radius = if(isSheetFullScreen) 0.dp else 12.dp
+
     // Allow us to find the view we are currently in.
     val navController: NavController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -116,6 +144,13 @@ fun MainView() {
     val topBar: @Composable () -> Unit = {
         TopAppBar(
             title = { Text(text = viewModel.currentScreen.value.title) },
+            actions = {
+                      IconButton(onClick = { scope.launch {
+                          if(sheetState.isVisible) sheetState.hide() else sheetState.show()
+                      } }) {
+                          Icon(imageVector = Icons.Default.MoreVert, contentDescription = "Top Bar Actions")
+                      }
+            },
             backgroundColor = Color.LightGray,
             navigationIcon = { IconButton(onClick = {
                 scope.launch {
@@ -129,7 +164,7 @@ fun MainView() {
     val navigateBottomBar: (Screen) -> Unit = { screen ->
         viewModel.setCurrentScreen(screen)
         navController.navigate(screen.route)
-        // Navigation is happen in two different places in the app. (Check DrawerItem)
+        // Navigation is happen in two different places in the app. (Check DrawerItem and bottomBar)
         // Which is fine because the changes are synchronized in the view model.
     }
 
@@ -137,11 +172,15 @@ fun MainView() {
         if(currentScreen.type == ScreenType.DRAWER || currentScreen == Screen.Home) {
             BottomNavigation(modifier = Modifier.wrapContentSize(), backgroundColor = Color.LightGray) {
                 bottomScreens.forEach { item ->
-                    BottomNavigationItem(selected = currentRoute == item.route,
+                    val isSelected = currentRoute == item.route
+                    BottomNavigationItem(selected = isSelected,
                         onClick = { navigateBottomBar(item) }, icon = {
-                            Icon(painter = painterResource(id = item.icon), contentDescription = item.title)
+                            val tint = if(isSelected) Color.Green else Color.Black
+                            Icon(painter = painterResource(id = item.icon), contentDescription = item.title, tint = tint)
                         },
-                        label = { Text(text = item.title)},
+                        label = {
+                            val fontWeight = if(isSelected) FontWeight.ExtraBold else FontWeight.SemiBold
+                            Text(text = item.title, fontWeight = fontWeight)},
                         selectedContentColor = Color.Transparent,
                         unselectedContentColor = Color.Black,
                     )
@@ -150,31 +189,56 @@ fun MainView() {
         }
     }
 
-    Scaffold(
-        bottomBar = bottomBar,
-        topBar = topBar,
-        scaffoldState = scaffoldState,
-        drawerContent = {
-            LazyColumn(modifier = Modifier.padding(16.dp)) {
-                items(drawerScreens) { item ->
-                    DrawerItem(selected = currentRoute == item.route, item = item) {
-                        scope.launch {
-                            scaffoldState.drawerState.close()
-                        }
-                        if(item.route == Screen.AddAccount.route) {
-                            dialogOpen.value = true
-                        } else {
-                            navigateBottomBar(item)
-                            title.value = item.title
+    ModalBottomSheetLayout(
+        sheetState = sheetState,
+        sheetShape = RoundedCornerShape(topStart = radius, topEnd = radius),
+        sheetContent = {
+        MoreBottomSheet(modifier = bottomSheetModifier, viewModel = viewModel)
+    }) {
+        Scaffold(
+            bottomBar = bottomBar,
+            topBar = topBar,
+            scaffoldState = scaffoldState,
+            drawerContent = {
+                LazyColumn(modifier = Modifier.padding(16.dp)) {
+                    items(drawerScreens) { item ->
+                        DrawerItem(selected = currentRoute == item.route, item = item) {
+                            scope.launch {
+                                scaffoldState.drawerState.close()
+                            }
+                            if(item.route == Screen.AddAccount.route) {
+                                dialogOpen.value = true
+                            } else {
+                                navigateBottomBar(item)
+                                title.value = item.title
+                            }
                         }
                     }
                 }
             }
-        }
         ) {
-        // Text(text = "Test Composable", modifier = Modifier.padding(it))
-        Navigation(navController = navController, viewModel = viewModel, pd = it)
-        AddAccountDialogue(dialogOpen = dialogOpen)
+            // Text(text = "Test Composable", modifier = Modifier.padding(it))
+            Navigation(navController = navController, viewModel = viewModel, pd = it)
+            AddAccountDialogue(dialogOpen = dialogOpen)
+        }
+    }
+}
+
+@Composable
+fun MoreBottomSheet(modifier: Modifier, viewModel: MainViewModel) {
+    Box(modifier = Modifier
+        .fillMaxWidth()
+        .height(300.dp)
+        .background(Color.DarkGray)) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.SpaceBetween) {
+            viewModel.bottomSheetOptions.forEach{ option ->
+                Row(modifier = modifier.padding(16.dp)) {
+                    Icon(modifier = Modifier.padding(end = 8.dp) ,painter = painterResource(id = option.icon), contentDescription = option.name, tint = Color.White)
+                    Text(text = option.name, fontSize = 20.sp, color = Color.White)
+                }
+            }
+
+        }
     }
 }
 
